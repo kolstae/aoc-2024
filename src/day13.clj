@@ -10,16 +10,6 @@
        (mapv (fn [line] (mapv parse-long (re-seq #"\d+" line))))
        (partitionv 3)))
 
-(defn gdc [^long a ^long b]
-  (if (= a b)
-    a
-    (if (< a b)
-      (recur (- b a) a)
-      (recur (- a b) a))))
-
-(defn lcm [^long a ^long b]
-  (* a (/ b (gdc a b))))
-
 (comment
 
   (->> (parse-input input)
@@ -38,26 +28,14 @@
   ; 29438
 
 
-
-  (->> (parse-input small-input)
-       (take 1)
-       (keep (fn [[[ax ay] [bx by] d]]
-               (let [[dx dy] d #_(mapv * d (repeat 10000000000000))
-                     lcm-x (lcm ax bx)
-                     lcm-y (lcm ay by)]
-                 [lcm-x lcm-y (gdc lcm-x lcm-y) d
-                  [(/ lcm-x ax) (/ lcm-y ay)]
-                  [(* 80 ax) (* 80 ay)]])
-               #_(->> d
-                    (iterate (fn [pd] (mapv - pd a)))
-                    (take-while #(not-any? neg? %))
-                    (map-indexed (fn [i [dx dy]]
-                                   [(+ (/ dx bx) (* i 3))
-                                    (and (zero? (mod dx bx))
-                                         (zero? (mod dy by))
-                                         (= (/ dx bx) (/ dy by)))]))
-                    (filter second)
-                    ffirst)))
-       #_(reduce +))
-  ;
+  (->> (parse-input input)
+       (mapv #(update % 2 (partial mapv + (repeat 10000000000000))))
+       (keep (fn [[[ax ay] [bx by] [px py]]]
+               (let [cb (long (/ (- (* ax py) (* ay px)) (- (* ax by) (* ay bx))))
+                     ca (long (/ (- px (* bx cb)) ax))]
+                 (when (and (= (+ (* ca ax) (* cb bx)) px)
+                            (= (+ (* ca ay) (* cb by)) py))
+                   (+ (* 3 ca) cb)))))
+       (reduce +))
+  ; 104958599303720
   )
